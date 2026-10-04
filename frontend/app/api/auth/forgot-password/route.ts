@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
         ? 'https://databasegenrator.onrender.com'
         : 'http://localhost:3001');
 
-    // 1. Try Express backend
+    // 1. Try Express backend first (with Resend HTML email template)
     try {
-      const res = await fetch(`${backendUrl}/api/auth/resend-verification`, {
+      const res = await fetch(`${backendUrl}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: normalizedEmail }),
@@ -32,18 +32,23 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(data, { status: res.status });
       }
 
-      console.warn(`Backend resend-verification returned non-JSON (${res.status}), attempting fallback`);
+      console.warn(`Backend forgot-password returned non-JSON (${res.status}), attempting direct Supabase fallback`);
     } catch (backendError) {
-      console.warn('Backend resend unreachable, attempting direct fallback:', backendError);
+      console.warn('Backend forgot-password unreachable, attempting direct fallback:', backendError);
     }
 
     // 2. Direct Supabase Admin fallback
     try {
+      const origin =
+        request.headers.get('origin') ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        'http://localhost:3000';
+
       const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
+        type: 'recovery',
         email: normalizedEmail,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login?verified=true`,
+          redirectTo: `${origin}/reset-password`,
         },
       });
 
@@ -51,23 +56,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: linkError.message }, { status: 400 });
       }
 
-      const verificationLink = linkData?.properties?.action_link;
+      const resetLink = linkData?.properties?.action_link;
 
       return NextResponse.json({
         success: true,
-        message: 'A fresh verification link has been generated.',
-        verificationLink,
+        message: 'Password reset link generated! Check your email or use the recovery link below.',
+        resetLink,
       });
     } catch (fallbackError: any) {
+      console.error('Password reset fallback error:', fallbackError);
       return NextResponse.json(
-        { error: fallbackError?.message || 'Failed to resend verification email' },
+        { error: fallbackError?.message || 'Failed to process password reset request' },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error('Resend verification route error:', error);
+    console.error('Forgot password route error:', error);
     return NextResponse.json(
-      { error: error?.message || 'Failed to resend verification email' },
+      { error: error?.message || 'Internal server error' },
       { status: 500 }
     );
   }

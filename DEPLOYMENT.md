@@ -53,11 +53,14 @@ Add these in Render Dashboard -> Environment:
 PORT=10000
 NODE_ENV=production
 CORS_ORIGIN=https://databasegenrator.vercel.app
+APP_URL=https://databasegenrator.vercel.app
 SUPABASE_URL=https://vhkwzctqkgaalmekeoge.supabase.co
 SUPABASE_ANON_KEY=<from backend/.env.production>
 SUPABASE_SERVICE_ROLE_KEY=<from backend/.env.production>
 GROQ_API_KEY=<from backend/.env.production>
 GROQ_MODEL=openai/gpt-oss-120b
+RESEND_API_KEY=<your-resend-api-key>
+RESEND_FROM_EMAIL=DB-Generator Studio <onboarding@resend.dev>
 ```
 
 NEVER paste secrets in render.yaml - use the dashboard UI only.

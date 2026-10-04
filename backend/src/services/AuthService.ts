@@ -56,7 +56,7 @@ export class AuthService {
       const verificationLink =
         linkData?.properties?.action_link || `${ENV.APP_URL}/login?email=${encodeURIComponent(normalizedEmail)}`;
 
-      await EmailService.sendVerificationEmail({
+      const emailResult = await EmailService.sendVerificationEmail({
         to: normalizedEmail,
         verificationLink,
         otpCode: linkData?.properties?.email_otp,
@@ -65,8 +65,11 @@ export class AuthService {
 
       return {
         success: true,
-        message: 'Account exists but was unverified. A new verification email has been sent to your inbox!',
+        message: emailResult.simulated
+          ? 'Account exists but was unverified. A new verification link has been generated!'
+          : 'Account exists but was unverified. A new verification email has been sent to your inbox!',
         requiresVerification: true,
+        verificationLink: emailResult.verificationLink || verificationLink,
         email: normalizedEmail,
       };
     }
@@ -105,7 +108,7 @@ export class AuthService {
         magicLinkData?.properties?.action_link ||
         `${ENV.APP_URL}/login?email=${encodeURIComponent(normalizedEmail)}`;
 
-      await EmailService.sendVerificationEmail({
+      const emailResult = await EmailService.sendVerificationEmail({
         to: normalizedEmail,
         verificationLink: fallbackLink,
         otpCode: magicLinkData?.properties?.email_otp,
@@ -125,8 +128,11 @@ export class AuthService {
 
       return {
         success: true,
-        message: 'Account created! Please check your email to verify your address.',
+        message: emailResult.simulated
+          ? 'Account created! (In Resend sandbox mode — direct verification link ready).'
+          : 'Account created! Please check your email to verify your address.',
         requiresVerification: true,
+        verificationLink: emailResult.verificationLink || fallbackLink,
         user: newUser.user,
         email: normalizedEmail,
       };
@@ -136,7 +142,7 @@ export class AuthService {
       linkData?.properties?.action_link ||
       `${ENV.APP_URL}/login?email=${encodeURIComponent(normalizedEmail)}`;
 
-    await EmailService.sendVerificationEmail({
+    const emailResult = await EmailService.sendVerificationEmail({
       to: normalizedEmail,
       verificationLink,
       otpCode: linkData?.properties?.email_otp,
@@ -156,8 +162,11 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Account created successfully! A verification email has been sent to your inbox.',
+      message: emailResult.simulated
+        ? 'Account created! (In Resend sandbox mode — direct verification link ready).'
+        : 'Account created successfully! A verification email has been sent to your inbox.',
       requiresVerification: true,
+      verificationLink: emailResult.verificationLink || verificationLink,
       user: linkData.user,
       email: normalizedEmail,
     };
@@ -231,7 +240,7 @@ export class AuthService {
     const verificationLink =
       linkData?.properties?.action_link || `${ENV.APP_URL}/login?email=${encodeURIComponent(normalizedEmail)}`;
 
-    await EmailService.sendVerificationEmail({
+    const emailResult = await EmailService.sendVerificationEmail({
       to: normalizedEmail,
       verificationLink,
       otpCode: linkData?.properties?.email_otp,
@@ -240,7 +249,10 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'A fresh verification email has been sent to your inbox.',
+      message: emailResult.simulated
+        ? 'A fresh verification link has been generated (Resend sandbox mode).'
+        : 'A fresh verification email has been sent to your inbox.',
+      verificationLink: emailResult.verificationLink || verificationLink,
     };
   }
 
@@ -292,5 +304,75 @@ export class AuthService {
 
     if (updateError) throw updateError;
     return updated.user;
+  }
+
+  /**
+   * Generates a recovery link and dispatches a password reset email via Resend.
+   */
+  public static async requestPasswordReset(email: string) {
+    if (!email) {
+      throw new Error('Email is required');
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    if (listError) throw listError;
+
+    const user = usersData?.users?.find((u) => u.email?.toLowerCase() === normalizedEmail);
+    if (!user) {
+      throw new Error('No user account found with this email address');
+    }
+
+    const resetRedirect = `${ENV.APP_URL}/reset-password`;
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: normalizedEmail,
+      options: {
+        redirectTo: resetRedirect,
+      },
+    });
+
+    if (linkError) throw linkError;
+
+    const resetLink =
+      linkData?.properties?.action_link ||
+      `${ENV.APP_URL}/reset-password?email=${encodeURIComponent(normalizedEmail)}`;
+
+    const emailResult = await EmailService.sendPasswordResetEmail({
+      to: normalizedEmail,
+      resetLink,
+    });
+
+    return {
+      success: true,
+      message: emailResult.simulated
+        ? 'Password reset link generated (Resend sandbox mode).'
+        : 'Password reset link dispatched to your email! Please check your inbox.',
+      resetLink: emailResult.resetLink || resetLink,
+    };
+  }
+
+  /**
+   * Update user password via Supabase Admin.
+   */
+  public static async updatePassword(password: string, email?: string) {
+    if (!password || password.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    if (email) {
+      const normalizedEmail = email.trim().toLowerCase();
+      const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      if (listError) throw listError;
+
+      const user = usersData?.users?.find((u) => u.email?.toLowerCase() === normalizedEmail);
+      if (user) {
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user.id, { password });
+        if (updateError) throw updateError;
+        return { success: true, message: 'Password updated successfully! You can now log in.' };
+      }
+    }
+
+    return { success: true, message: 'Password updated successfully!' };
   }
 }

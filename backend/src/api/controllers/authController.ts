@@ -83,6 +83,32 @@ export class AuthController {
     }
   }
 
+  public static async forgotPassword(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      const result = await AuthService.requestPasswordReset(email);
+      return res.status(200).json(result);
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message || 'Failed to process password reset request' });
+    }
+  }
+
+  public static async updatePassword(req: Request, res: Response) {
+    try {
+      const { password, email } = req.body;
+      if (!password) {
+        return res.status(400).json({ error: 'Password is required' });
+      }
+      const result = await AuthService.updatePassword(password, email);
+      return res.status(200).json(result);
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message || 'Failed to update password' });
+    }
+  }
+
   public static async logout(_req: Request, res: Response) {
     return res.status(200).json({ success: true, message: 'Logged out successfully' });
   }

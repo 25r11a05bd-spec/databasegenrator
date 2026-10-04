@@ -26,3 +26,9 @@ services:
         sync: false
       - key: GROQ_MODEL
         value: openai/gpt-oss-120b
+      - key: APP_URL
+        value: https://databasegenrator.vercel.app
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: DB-Generator Studio <onboarding@resend.dev>

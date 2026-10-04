@@ -72,6 +72,26 @@ export async function deleteDatabaseRecord(recordId: number) {
   if (error) throw new Error(error.message);
 }
 
+export async function resetPasswordForEmail(email: string, redirectTo?: string) {
+  const redirectUrl =
+    redirectTo ||
+    (typeof window !== 'undefined'
+      ? `${window.location.origin}/reset-password`
+      : 'http://localhost:3000/reset-password');
+
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectUrl,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateUserPassword(password: string) {
+  const { data, error } = await supabase.auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 // Aliases used by existing components
 export const loginUser = signInUser;
 export const registerUser = signUpUser;

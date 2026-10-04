@@ -29,6 +29,11 @@ app.use('/api/database', databaseRoutes);
 app.use('/api/groq', groqRoutes);
 app.use('/api/health', healthRoutes);
 
+// 404 JSON handler for unmatched routes
+app.use((_req: express.Request, res: express.Response) => {
+  res.status(404).json({ error: 'Endpoint not found on backend API' });
+});
+
 // Global Error Handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled server error:', err);

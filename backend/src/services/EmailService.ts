@@ -263,7 +263,7 @@ export class EmailService {
    */
   public static async sendVerificationEmail(
     params: SendVerificationEmailParams
-  ): Promise<{ success: boolean; id?: string; simulated?: boolean; message?: string }> {
+  ): Promise<{ success: boolean; id?: string; simulated?: boolean; message?: string; verificationLink?: string }> {
     const { to, verificationLink, otpCode, isNewUserLogin } = params;
 
     if (!to || !verificationLink) {
@@ -318,8 +318,21 @@ export class EmailService {
       });
 
       if (response.error) {
-        console.error('[Resend Email Service] Resend API Error:', response.error);
-        throw new Error(response.error.message || 'Failed to send email via Resend');
+        console.warn('[Resend Email Service] Resend dispatch note:', response.error.message);
+        console.log(`\n==================================================`);
+        console.log(`[RESEND SANDBOX / SIMULATION LINK]`);
+        console.log(`Recipient: ${to}`);
+        console.log(`Verification URL: ${verificationLink}`);
+        if (otpCode) console.log(`OTP Code: ${otpCode}`);
+        console.log(`Reason: ${response.error.message}`);
+        console.log(`==================================================\n`);
+
+        return {
+          success: true,
+          simulated: true,
+          verificationLink,
+          message: `Verification link generated! (Resend sandbox: deliverable only to account owner or via server console).`,
+        };
       }
 
       console.log(`[Resend Email Service] Email delivered to ${to}, Resend ID: ${response.data?.id}`);
@@ -328,11 +341,201 @@ export class EmailService {
         success: true,
         id: response.data?.id,
         simulated: false,
+        verificationLink,
         message: 'Verification email delivered successfully.',
       };
     } catch (err: any) {
-      console.error('[Resend Email Service] Exception sending email:', err);
-      throw new Error(`Email delivery failed: ${err.message || 'Unknown Resend error'}`);
+      console.warn('[Resend Email Service] Exception sending email:', err.message || err);
+      console.log(`\n==================================================`);
+      console.log(`[FALLBACK VERIFICATION LINK]`);
+      console.log(`Recipient: ${to}`);
+      console.log(`Verification URL: ${verificationLink}`);
+      if (otpCode) console.log(`OTP Code: ${otpCode}`);
+      console.log(`==================================================\n`);
+
+      return {
+        success: true,
+        simulated: true,
+        verificationLink,
+        message: 'Verification link generated (check server console or use direct link).',
+      };
+    }
+  }
+
+  /**
+   * Generates a modern, dark-themed HTML password reset email template.
+   */
+  public static generatePasswordResetEmailHtml(params: {
+    email: string;
+    resetLink: string;
+  }): string {
+    const { email, resetLink } = params;
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reset Your Password - DB-Generator Studio</title>
+  <style>
+    body {
+      margin: 0; padding: 0; width: 100% !important; background-color: #07060d; color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #07060d; color: #f1f5f9;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #07060d; table-layout: fixed;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 0 auto;">
+          <tr>
+            <td align="center" style="padding-bottom: 24px;">
+              <span style="font-size: 18px; font-weight: 700; color: #ffffff;">
+                DB-Generator <span style="color: #a78bfa; font-weight: 400; font-size: 14px;">Studio</span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #0f1322; border-radius: 16px; border: 1px solid #232942; overflow: hidden;">
+                <tr>
+                  <td height="4" style="background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 50%, #38bdf8 100%);">&nbsp;</td>
+                </tr>
+                <tr>
+                  <td style="padding: 36px 32px 32px 32px;">
+                    <div style="display: inline-block; background-color: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.35); border-radius: 9999px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #f472b6; text-transform: uppercase; margin-bottom: 20px;">
+                      Password Recovery
+                    </div>
+                    <h1 style="margin: 0 0 12px 0; font-size: 24px; font-weight: 700; color: #ffffff;">
+                      Reset Your Password
+                    </h1>
+                    <p style="margin: 0 0 24px 0; font-size: 15px; line-height: 1.6; color: #94a3b8;">
+                      We received a request to reset the password for your DB-Generator Studio account. Click the button below to choose a new password.
+                    </p>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 28px; background-color: #171c2e; border: 1px solid #28314e; border-radius: 10px;">
+                      <tr>
+                        <td style="padding: 14px 18px;">
+                          <div style="font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 4px;">Account</div>
+                          <div style="font-family: monospace; font-size: 14px; font-weight: 600; color: #e2e8f0;">${email}</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 28px;">
+                      <tr>
+                        <td align="center">
+                          <a href="${resetLink}" target="_blank" style="display: inline-block; padding: 15px 36px; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 10px; background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); box-shadow: 0 4px 20px rgba(124, 58, 237, 0.45);">
+                            Reset Password &rarr;
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                    <div style="padding-top: 20px; border-top: 1px solid #1e2439; margin-top: 10px;">
+                      <p style="margin: 0 0 8px 0; font-size: 13px; color: #64748b;">
+                        If the button above doesn't work, copy and paste this link:
+                      </p>
+                      <p style="margin: 0; font-size: 12px; word-break: break-all;">
+                        <a href="${resetLink}" target="_blank" style="color: #a78bfa; font-family: monospace;">${resetLink}</a>
+                      </p>
+                    </div>
+                    <div style="margin-top: 24px; background-color: rgba(30, 41, 59, 0.5); border-left: 3px solid #ec4899; padding: 12px 14px; border-radius: 0 6px 6px 0;">
+                      <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #94a3b8;">
+                        &#128274; This link is valid for <strong>1 hour</strong>. If you did not request a password reset, please ignore this email.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  /**
+   * Sends a password reset email using Resend with graceful fallback.
+   */
+  public static async sendPasswordResetEmail(params: {
+    to: string;
+    resetLink: string;
+  }): Promise<{ success: boolean; id?: string; simulated?: boolean; message?: string; resetLink?: string }> {
+    const { to, resetLink } = params;
+
+    if (!to || !resetLink) {
+      throw new Error('Recipient email and reset link are required');
+    }
+
+    const html = this.generatePasswordResetEmailHtml({ email: to, resetLink });
+    const text = `DB-Generator Studio - Password Reset\n\nClick the link below to reset your password:\n${resetLink}\n\nThis link expires in 1 hour. If you didn't request this, you can ignore this email.`;
+    const subject = 'Reset your password - DB-Generator Studio';
+
+    if (!isResendConfigured()) {
+      console.warn(
+        `\n[Resend Email Service - Password Reset Simulation]` +
+        `\n  To: ${to}` +
+        `\n  Reset Link: ${resetLink}\n`
+      );
+      return {
+        success: true,
+        simulated: true,
+        resetLink,
+        message: 'Password reset link simulated (RESEND_API_KEY not configured). Check server console.',
+      };
+    }
+
+    try {
+      const fromEmail = ENV.RESEND_FROM_EMAIL || 'DB-Generator Studio <onboarding@resend.dev>';
+      const response = await resendClient.emails.send({
+        from: fromEmail,
+        to: [to],
+        subject,
+        html,
+        text,
+      });
+
+      if (response.error) {
+        console.warn('[Resend Email Service] Password reset dispatch notice:', response.error.message);
+        console.log(`\n==================================================`);
+        console.log(`[RESEND SANDBOX / PASSWORD RESET LINK]`);
+        console.log(`Recipient: ${to}`);
+        console.log(`Reset URL: ${resetLink}`);
+        console.log(`Reason: ${response.error.message}`);
+        console.log(`==================================================\n`);
+
+        return {
+          success: true,
+          simulated: true,
+          resetLink,
+          message: 'Password reset link generated! (Resend sandbox: check server console or use direct link).',
+        };
+      }
+
+      console.log(`[Resend Email Service] Password reset email delivered to ${to}, Resend ID: ${response.data?.id}`);
+      return {
+        success: true,
+        id: response.data?.id,
+        simulated: false,
+        resetLink,
+        message: 'Password reset email sent successfully.',
+      };
+    } catch (err: any) {
+      console.warn('[Resend Email Service] Exception sending password reset:', err.message || err);
+      console.log(`\n==================================================`);
+      console.log(`[FALLBACK PASSWORD RESET LINK]`);
+      console.log(`Recipient: ${to}`);
+      console.log(`Reset URL: ${resetLink}`);
+      console.log(`==================================================\n`);
+
+      return {
+        success: true,
+        simulated: true,
+        resetLink,
+        message: 'Password reset link generated (check server console or use direct link).',
+      };
     }
   }
 }

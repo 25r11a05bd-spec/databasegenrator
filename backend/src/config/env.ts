@@ -16,7 +16,11 @@ export const ENV = {
   PORT: process.env.PORT ? parseInt(process.env.PORT, 10) : 3001,
   CORS_ORIGIN: process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:3000', 'http://localhost:3002'],
+    : [
+        'https://databasegenrator.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:3002',
+      ],
   SUPABASE_URL: requireEnv('SUPABASE_URL'),
   SUPABASE_ANON_KEY: requireEnv('SUPABASE_ANON_KEY'),
   SUPABASE_SERVICE_ROLE_KEY: requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
@@ -24,5 +28,10 @@ export const ENV = {
   GROQ_MODEL: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'DB-Generator Studio <onboarding@resend.dev>',
-  APP_URL: process.env.APP_URL || process.env.FRONTEND_URL || 'http://localhost:3000',
+  APP_URL:
+    process.env.APP_URL ||
+    process.env.FRONTEND_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://databasegenrator.vercel.app'
+      : 'http://localhost:3000'),
 };

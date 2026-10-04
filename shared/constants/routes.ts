@@ -4,6 +4,8 @@ export const API_ROUTES = {
     LOGIN: '/api/auth/login',
     LOGOUT: '/api/auth/logout',
     CONFIRM: '/api/auth/confirm',
+    FORGOT_PASSWORD: '/api/auth/forgot-password',
+    UPDATE_PASSWORD: '/api/auth/update-password',
   },
   DATABASE: {
     HISTORY: '/api/database/history',
@@ -23,6 +25,7 @@ export const APP_ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
+  RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/dashboard',
   DATABASES: '/databases',
   GENERATOR: '/generator',
