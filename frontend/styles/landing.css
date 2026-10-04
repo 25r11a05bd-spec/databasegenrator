@@ -1,0 +1,211 @@
+/* Interactive Mouse Follower Glow */
+#cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.14) 0%, rgba(6, 182, 212, 0.04) 40%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: transform 0.12s ease-out, opacity 0.3s ease;
+  z-index: 1;
+  will-change: transform;
+}
+
+/* Cosmic Grid Background with subtle drift */
+.bg-cosmic-grid {
+  background-color: #090812;
+  background-image: 
+    radial-gradient(circle at 50% 8%, rgba(139, 92, 246, 0.22) 0%, transparent 55%),
+    radial-gradient(circle at 85% 25%, rgba(6, 182, 212, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 15% 65%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+    radial-gradient(rgba(139, 92, 246, 0.22) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px;
+}
+
+/* Ambient Nebulae Animations */
+@keyframes nebulaDrift {
+  0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.8; }
+  50% { transform: translate(-48%, 25px) scale(1.08); opacity: 1; }
+}
+.animate-nebula-drift {
+  animation: nebulaDrift 14s ease-in-out infinite;
+}
+
+/* Ultra Frosted Glass Card */
+.glass-frosted {
+  background: rgba(18, 15, 36, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-frosted:hover {
+  border-color: rgba(139, 92, 246, 0.55);
+}
+
+.glass-node {
+  background: rgba(14, 12, 28, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+/* Glowing Relational Connector Animation */
+.glow-wire-violet {
+  stroke: #8b5cf6;
+  stroke-dasharray: 6 6;
+  animation: wireTravel 18s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.85));
+}
+.glow-wire-cyan {
+  stroke: #06b6d4;
+  stroke-dasharray: 6 6;
+  animation: wireTravelRev 16s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.85));
+}
+@keyframes wireTravel {
+  from { stroke-dashoffset: 240; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes wireTravelRev {
+  from { stroke-dashoffset: -200; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Floating Canvas Animation */
+@keyframes canvasFloat {
+  0%, 100% { transform: translateY(-6px); }
+  50% { transform: translateY(6px); }
+}
+.animate-canvas-float {
+  animation: canvasFloat 5.5s ease-in-out infinite;
+}
+
+/* Shimmering Text Gradient for Hero */
+@keyframes shimmerText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-text {
+  background-size: 200% auto;
+  animation: shimmerText 5s linear infinite;
+}
+
+/* Pulsing Primary Button Glow */
+@keyframes pulseGlowBtn {
+  0%, 100% { box-shadow: 0 0 25px -4px rgba(139, 92, 246, 0.5); }
+  50% { box-shadow: 0 0 38px 2px rgba(139, 92, 246, 0.85), 0 0 15px rgba(6, 182, 212, 0.4); }
+}
+.btn-pulse-glow {
+  animation: pulseGlowBtn 3.2s ease-in-out infinite;
+}
+.btn-pulse-glow:hover {
+  box-shadow: 0 0 35px 4px rgba(139, 92, 246, 0.85), 0 0 20px rgba(6, 182, 212, 0.5) !important;
+  transform: scale(1.05);
+}
+.btn-secondary-glow:hover {
+  box-shadow: 0 0 25px -2px rgba(6, 182, 212, 0.4);
+  border-color: rgba(6, 182, 212, 0.6);
+  transform: scale(1.03);
+}
+
+/* Floating Data Particles in Hero */
+.particle {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.8) 0%, transparent 70%);
+  animation: driftUp 7s linear infinite;
+}
+@keyframes driftUp {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.6; }
+  100% { transform: translateY(-160px) scale(1.2); opacity: 0; }
+}
+
+/* Feature Card Icons 360 Spin on Card Hover */
+.feature-card:hover .feature-icon {
+  transform: rotate(360deg) scale(1.15);
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.8);
+  border-color: rgba(167, 139, 250, 0.8);
+}
+.feature-icon {
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* Step number badge pop */
+.step-card:hover .step-badge {
+  transform: scale(1.18);
+  box-shadow: 0 0 22px rgba(6, 182, 212, 0.7);
+}
+.step-badge {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+}
+
+/* Pulsing Gradient Border for CTA Container */
+@keyframes borderPulse {
+  0%, 100% { border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 0 45px -8px rgba(139, 92, 246, 0.45); }
+  50% { border-color: rgba(6, 182, 212, 0.7); box-shadow: 0 0 55px -4px rgba(6, 182, 212, 0.5); }
+}
+.cta-glow-box {
+  animation: borderPulse 6s ease-in-out infinite;
+}
+
+/* Footer Links Animated Underline */
+.footer-link {
+  position: relative;
+  display: inline-block;
+  transition: color 0.25s ease;
+}
+.footer-link::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: #d0bcff;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* Reveal On Scroll Utility classes */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-item.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-left.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-scale.revealed {
+  opacity: 1;
+  transform: scale(1);
+}

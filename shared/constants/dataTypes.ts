@@ -1,0 +1,29 @@
+export const SQL_DATA_TYPES = [
+  'SERIAL',
+  'BIGSERIAL',
+  'VARCHAR(255)',
+  'TEXT',
+  'INT',
+  'BIGINT',
+  'SMALLINT',
+  'DECIMAL(10,2)',
+  'NUMERIC',
+  'BOOLEAN',
+  'DATE',
+  'TIMESTAMP WITH TIME ZONE',
+  'TIMESTAMP',
+  'UUID',
+  'JSON',
+  'JSONB',
+] as const;
+
+export type SqlDataType = (typeof SQL_DATA_TYPES)[number];
+
+export const DATA_TYPE_CATEGORIES = {
+  IDENTIFIERS: ['SERIAL', 'BIGSERIAL', 'UUID', 'INT'],
+  TEXT: ['VARCHAR(255)', 'TEXT'],
+  NUMBERS: ['INT', 'BIGINT', 'SMALLINT', 'DECIMAL(10,2)', 'NUMERIC'],
+  DATE_TIME: ['TIMESTAMP WITH TIME ZONE', 'TIMESTAMP', 'DATE'],
+  BOOLEAN: ['BOOLEAN'],
+  OBJECT: ['JSON', 'JSONB'],
+};
