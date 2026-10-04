@@ -9,9 +9,9 @@ Stack: Next.js 16 (Vercel) + Express/TypeScript (Render) + Supabase (Database & 
 ```
 Internet
   |
-  +---> Vercel (CDN) - Next.js Frontend - db-generator.vercel.app
+  +---> Vercel (CDN) - Next.js Frontend - databasegenrator.vercel.app
   |          |
-  +---> Render (Server) - Express Backend - db-generator-backend.onrender.com
+  +---> Render (Server) - Express Backend - databasegenrator.onrender.com
               |
           Supabase (Cloud) - PostgreSQL + Auth - vhkwzctqkgaalmekeoge.supabase.co
 ```
@@ -40,7 +40,7 @@ Internet
 |---------|-------|
 | Name | db-generator-backend |
 | Root Directory | backend |
-| Build Command | npm install && npm run build |
+| Build Command | npm install --include=dev && npm run build |
 | Start Command | npm start |
 | Node Version | 20.x |
 | Plan | Free |
@@ -52,7 +52,7 @@ Add these in Render Dashboard -> Environment:
 ```
 PORT=10000
 NODE_ENV=production
-CORS_ORIGIN=https://db-generator.vercel.app
+CORS_ORIGIN=https://databasegenrator.vercel.app
 SUPABASE_URL=https://vhkwzctqkgaalmekeoge.supabase.co
 SUPABASE_ANON_KEY=<from backend/.env.production>
 SUPABASE_SERVICE_ROLE_KEY=<from backend/.env.production>
@@ -65,7 +65,7 @@ NEVER paste secrets in render.yaml - use the dashboard UI only.
 ### Step 4 - Verify Deployment
 ```bash
 curl https://databasegenrator.onrender.com/api/health
-# Expected: { "status": "ok", "timestamp": "..." }
+# Expected: { "status": "healthy", "timestamp": "..." }
 ```
 
 ---
@@ -82,10 +82,10 @@ curl https://databasegenrator.onrender.com/api/health
 Add in Vercel Dashboard -> Settings -> Environment Variables:
 
 ```
-NEXT_PUBLIC_BACKEND_URL=https://db-generator-backend.onrender.com
+NEXT_PUBLIC_BACKEND_URL=https://databasegenrator.onrender.com
 NEXT_PUBLIC_SUPABASE_URL=https://vhkwzctqkgaalmekeoge.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<from frontend/.env.production>
-NEXT_PUBLIC_APP_URL=https://db-generator.vercel.app
+NEXT_PUBLIC_APP_URL=https://databasegenrator.vercel.app
 GROQ_API_KEY=<from frontend/.env.production>
 GROQ_MODEL=openai/gpt-oss-120b
 SUPABASE_SERVICE_ROLE_KEY=<from frontend/.env.production>
@@ -126,8 +126,8 @@ CREATE POLICY "Users can only see their own schemas"
 
 ### Supabase Auth Settings
 1. Supabase Dashboard -> Authentication -> URL Configuration
-2. Site URL: `https://db-generator.vercel.app`
-3. Redirect URLs: `https://db-generator.vercel.app/**`
+2. Site URL: `https://databasegenrator.vercel.app`
+3. Redirect URLs: `https://databasegenrator.vercel.app/**`
 
 ---
 
