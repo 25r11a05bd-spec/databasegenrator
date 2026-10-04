@@ -64,7 +64,7 @@ NEVER paste secrets in render.yaml - use the dashboard UI only.
 
 ### Step 4 - Verify Deployment
 ```bash
-curl https://db-generator-backend.onrender.com/api/health
+curl https://databasegenrator.onrender.com/api/health
 # Expected: { "status": "ok", "timestamp": "..." }
 ```
 
