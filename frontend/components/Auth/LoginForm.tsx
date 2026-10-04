@@ -13,7 +13,25 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [resetLink, setResetLink] = useState<string | null>(null);
   const router = useRouter();
+
+  // Check URL params for messages on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("password_reset") === "true") {
+        toast.success("Password updated successfully! Please sign in with your new password.");
+      }
+      if (params.get("verified") === "true") {
+        toast.success("Email verified successfully! You can now log in.");
+      }
+    }
+  }, []);
 
   // Mouse cursor spotlight interaction
   useEffect(() => {
@@ -81,7 +99,56 @@ export default function LoginForm() {
   };
 
   const handleForgotPassword = () => {
-    toast.info("Password Reset: Enter your email and contact support or request a reset link.");
+    setForgotEmail(email.trim());
+    setForgotSent(false);
+    setResetLink(null);
+    setShowForgotModal(true);
+  };
+
+  const handleSendResetLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      toast.error("Please enter your account email address");
+      return;
+    }
+
+    setForgotLoading(true);
+    const toastId = toast.loading("Dispatching password reset link...");
+
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+
+      const contentType = res.headers.get("content-type") || "";
+      let result: any = null;
+      if (contentType.includes("application/json")) {
+        result = await res.json();
+      } else {
+        await res.text();
+        throw new Error(
+          res.status === 502 || res.status === 503
+            ? "Authentication service is warming up. Please try again shortly."
+            : `Server returned unexpected response (${res.status}).`
+        );
+      }
+
+      if (!res.ok) {
+        throw new Error(result?.error || "Failed to send reset email");
+      }
+
+      setForgotSent(true);
+      if (result?.resetLink) {
+        setResetLink(result.resetLink);
+      }
+      toast.success(result?.message || "Password reset link dispatched!", { id: toastId });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send password reset email", { id: toastId });
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   return (
@@ -463,6 +530,133 @@ export default function LoginForm() {
           </div>
         </div>
       </footer>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-2xl bg-[#0f1322] border border-white/10 shadow-2xl overflow-hidden p-6 sm:p-7 text-left space-y-5">
+            {/* Header accent gradient */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-pink-500"></div>
+
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-mono font-medium mb-2">
+                  <span>🔑</span>
+                  <span>Account Recovery</span>
+                </div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Reset Password</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Enter your email address to receive a secure password recovery link.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {forgotSent ? (
+              <div className="space-y-4 py-2">
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 space-y-1">
+                  <div className="font-semibold flex items-center space-x-1.5">
+                    <span>✓</span>
+                    <span>Reset email dispatched!</span>
+                  </div>
+                  <p className="text-slate-300">
+                    We sent a recovery link to <span className="font-mono text-white font-medium">{forgotEmail}</span>. Click the link in your inbox to set a new password.
+                  </p>
+                </div>
+
+                {resetLink && (
+                  <div className="p-3.5 rounded-xl bg-purple-950/40 border border-purple-500/40 space-y-2">
+                    <div className="text-xs font-semibold text-purple-300 flex items-center space-x-1">
+                      <span>🚀</span>
+                      <span>Direct Recovery Link (Sandbox / Dev Mode)</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Testing locally or in Resend sandbox? You can open the password reset page directly:
+                    </p>
+                    <a
+                      href={resetLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full py-2 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold text-center transition shadow-md shadow-purple-600/30"
+                    >
+                      Open Password Reset Page →
+                    </a>
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotSent(false);
+                      setResetLink(null);
+                    }}
+                    className="flex-1 py-2 px-3 rounded-lg border border-white/10 hover:border-white/20 bg-slate-800/40 hover:bg-slate-800 text-xs text-slate-300 hover:text-white transition cursor-pointer"
+                  >
+                    Resend link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="flex-1 py-2 px-3 rounded-lg bg-white/10 hover:bg-white/15 text-xs text-white font-medium transition cursor-pointer"
+                  >
+                    Back to Sign In
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSendResetLink} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5" htmlFor="forgot-email">
+                    Account Email
+                  </label>
+                  <div className="relative rounded-lg shadow-sm">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
+                      </svg>
+                    </div>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="alex.chen@enterprise.io"
+                      className="glass-input block w-full pl-9 pr-3 py-2.5 rounded-lg text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none font-mono transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="flex-1 py-2.5 px-3 rounded-lg border border-white/10 hover:border-white/20 bg-slate-800/40 hover:bg-slate-800 text-xs font-medium text-slate-300 hover:text-white transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="flex-1 py-2.5 px-3 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-purple-600/30 transition disabled:opacity-50 cursor-pointer text-center"
+                  >
+                    {forgotLoading ? "Sending link..." : "Send Reset Link →"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

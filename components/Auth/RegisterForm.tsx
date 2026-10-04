@@ -20,6 +20,7 @@ export default function RegisterForm() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [devVerificationLink, setDevVerificationLink] = useState<string | null>(null);
 
   // Spotlight mouse effect
   useEffect(() => {
@@ -71,14 +72,31 @@ export default function RegisterForm() {
         body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      const result = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      let result: any = null;
+      if (contentType.includes("application/json")) {
+        result = await res.json();
+      } else {
+        await res.text();
+        throw new Error(
+          res.status === 502 || res.status === 503
+            ? "Authentication service is warming up. Please try again in a few moments."
+            : `Server returned an unexpected response (${res.status}). Please try again.`
+        );
+      }
 
       if (!res.ok) {
-        throw new Error(result.error || "Registration failed");
+        throw new Error(result?.error || "Registration failed");
+      }
+
+      if (result?.verificationLink) {
+        setDevVerificationLink(result.verificationLink);
       }
 
       setVerificationSent(true);
-      toast.success("Verification email dispatched via Resend! Check your inbox.");
+      toast.success(
+        result?.message || "Verification email dispatched via Resend! Check your inbox."
+      );
     } catch (err: any) {
       toast.error(err?.message ?? "Registration failed");
     } finally {
@@ -98,13 +116,29 @@ export default function RegisterForm() {
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const result = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      let result: any = null;
+      if (contentType.includes("application/json")) {
+        result = await res.json();
+      } else {
+        await res.text();
+        throw new Error(
+          res.status === 502 || res.status === 503
+            ? "Authentication service is warming up. Please try again in a few moments."
+            : `Server returned an unexpected response (${res.status}). Please try again.`
+        );
+      }
+
       if (!res.ok) {
-        throw new Error(result.error || "Failed to resend email");
+        throw new Error(result?.error || "Failed to resend email");
+      }
+
+      if (result?.verificationLink) {
+        setDevVerificationLink(result.verificationLink);
       }
 
       setCooldown(30);
-      toast.success(result.message || "Fresh verification email sent!", { id: toastId });
+      toast.success(result?.message || "Fresh verification email sent!", { id: toastId });
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to resend verification email", { id: toastId });
     } finally {
@@ -252,6 +286,26 @@ export default function RegisterForm() {
                   <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
                     Please click the verification link inside the email to activate your account. You can then log in to access the studio.
                   </p>
+
+                  {devVerificationLink && (
+                    <div className="w-full p-3 rounded-lg bg-purple-950/40 border border-purple-500/40 text-left space-y-2">
+                      <div className="flex items-center space-x-1.5 text-xs font-semibold text-purple-300">
+                        <span>🚀</span>
+                        <span>Direct Activation Link (Sandbox / Dev Mode)</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        If Resend testing mode restricts delivery to your inbox, activate immediately with this link:
+                      </p>
+                      <a
+                        href={devVerificationLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-full py-1.5 px-3 rounded bg-purple-600/80 hover:bg-purple-600 text-white text-xs font-medium text-center transition"
+                      >
+                        Verify Email &amp; Activate Account →
+                      </a>
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="w-full space-y-3 pt-2">
