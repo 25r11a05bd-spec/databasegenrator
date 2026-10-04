@@ -7,17 +7,27 @@ The backend service runs on port `3001` (by default).
 ## 1. Authentication (`/api/auth`)
 
 ### `POST /api/auth/register`
-Creates a user in Supabase with pre-verified email.
+Creates a user in Supabase with unconfirmed email and sends a verification email via Resend with responsive HTML formatting.
 - **Body:** `{ "email": "user@example.com", "password": "password123" }`
-- **Response:** `{ "user": { ... }, "message": "Account created and verified successfully!" }`
+- **Response:** `{ "success": true, "message": "Account created! Please check your email to verify your address.", "requiresVerification": true, "user": { ... } }`
 
 ### `POST /api/auth/login`
-Authenticates a user via Supabase.
+Authenticates a user via Supabase. If the user's email is unverified, dispatches a fresh verification email via Resend and requires verification.
 - **Body:** `{ "email": "user@example.com", "password": "password123" }`
-- **Response:** `{ "user": { ... }, "session": { ... } }`
+- **Response (Verified):** `{ "user": { ... }, "session": { ... } }`
+- **Response (Unverified, 403):** `{ "error": "Email not verified...", "code": "EMAIL_NOT_CONFIRMED", "requiresVerification": true }`
+
+### `POST /api/auth/resend-verification`
+Dispatches a new HTML verification email via Resend for an unconfirmed user.
+- **Body:** `{ "email": "user@example.com" }`
+- **Response:** `{ "success": true, "message": "A fresh verification email has been sent to your inbox." }`
+
+### `GET /api/auth/verify`
+Verifies user email via confirmation token/hash and redirects to `${APP_URL}/login?verified=true`.
+- **Query Params:** `?token=<hash>&email=<email>&type=signup`
 
 ### `POST /api/auth/confirm`
-Auto-confirms an unconfirmed user via Supabase admin service key.
+Confirms an unconfirmed user directly via Supabase admin service key.
 - **Body:** `{ "email": "user@example.com" }`
 
 ---
