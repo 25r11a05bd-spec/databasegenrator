@@ -22,4 +22,7 @@ export const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
   GROQ_API_KEY: requireEnv('GROQ_API_KEY'),
   GROQ_MODEL: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'DB-Generator Studio <onboarding@resend.dev>',
+  APP_URL: process.env.APP_URL || process.env.FRONTEND_URL || 'http://localhost:3000',
 };
